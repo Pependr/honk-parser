@@ -8,5 +8,6 @@
         "ms-python.vscode-python-envs",
         "charliermarsh.ruff",
         "bierner.markdown-mermaid",
+        "davidanson.vscode-markdownlint",
     ]
 }
