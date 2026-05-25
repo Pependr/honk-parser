@@ -1,11 +1,10 @@
 import click
 
-import enum
+import pathlib
 import functools
 
-from pathlib import Path
-
-from typing import Any, Callable
+from typing import Any
+from collections.abc import Mapping, Callable
 
 from mdparser import parselib
 
@@ -16,15 +15,21 @@ def root() -> None: ...
 
 @root.group("parse", invoke_without_command=True)
 @click.pass_context
-@click.argument("path", type=Path)
-@click.option("-t", "--target", type=str, default=".")
-@click.option("-d", "--delim", type=str, default="/")
+@click.argument("path", type=click.Path(dir_okay=False, path_type=pathlib.Path))
+@click.option("-t", "--target", default=".")
+@click.option("-d", "--delim", default="/")
 def parse_group(
-	ctx: click.Context, path: Path, target: str, delim: str
+	ctx: click.Context, path: pathlib.Path, target: str, delim: str
 ) -> None:
-	data = parselib.resolve_wildcard(
-		parselib.parse_file(path), parselib.split_obj_path(target, delim)
-	)
+	target_path = parselib.split_obj_path(target, delim)
+
+	data = parselib.resolve_path(parselib.parse_file(path), target_path)
+
+	if target_path[-1] != "*":
+		for k, v in data.items():
+			if isinstance(v, Mapping):
+				continue
+			data[k] = {target_path[-1]: v}
 
 	if ctx.invoked_subcommand is None:
 		click.echo(data)
@@ -43,29 +48,17 @@ def template[T](tmp_comm: Callable[..., T]) -> click.Command:
 	return wrapper
 
 
-class Align(enum.StrEnum):
-	RIGHT = "-:"
-	CENTER = ":-:"
-	LEFT = ":-"
-	NONE = "-"
-
-
 @template
-@click.argument("header", nargs=-1)
-@click.option(
-	"-a",
-	"--align",
-	default=Align.NONE,
-	type=click.Choice(Align, case_sensitive=False),
-)
-def table(data: dict[str, Any], header: tuple[str, ...], align: Align) -> None:
+def table(data: Mapping[str, Mapping[str, Any]]) -> None:
 	result: list[str] = []
 
-	result.append(f"|{"|".join(header)}|")
+	header = tuple(data.values())[0].keys()
 
-	result.append(f"|{"|".join([align.value] * len(header))}|")
+	result.append(f"||{"|".join(header)}|")
+
+	result.append(f"|{"|".join("-" * (len(header) + 1))}|")
 
 	for k, v in data.items():
-		result.append(f"|{k}|{v}|")
+		result.append(f"|{k}|{"|".join(str(i) for i in v.values())}|")
 
 	click.echo("\n".join(result))

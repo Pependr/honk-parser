@@ -55,8 +55,8 @@ def test_deep_get() -> None:
 	assert pl.deep_get(0, []) == 0  # type: ignore
 
 
-def test_resolve_wildcard() -> None:
-	assert pl.resolve_wildcard(
+def test_resolve_path() -> None:
+	assert pl.resolve_path(
 		{
 			"files": {
 				"test_bruh.py": {
@@ -74,7 +74,7 @@ def test_resolve_wildcard() -> None:
 		["files", "*", "summary"],
 	) == {"test_bruh.py": "bruh_summary", "test_dude.py": "dude_summary"}
 
-	assert pl.resolve_wildcard(
+	assert pl.resolve_path(
 		{"files": {"test_bruh.py": {"summary": "bruh_summary"}}},
 		["files", "test_bruh.py", "summary"],
 	) == pl.deep_get(
@@ -82,7 +82,7 @@ def test_resolve_wildcard() -> None:
 		["files", "test_bruh.py", "summary"],
 	)
 
-	assert pl.resolve_wildcard(
+	assert pl.resolve_path(
 		{
 			"files": {
 				"test_bruh.py": {

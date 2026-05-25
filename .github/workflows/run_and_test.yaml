@@ -29,6 +29,9 @@ jobs:
             - name: "Run Pytest and collect coverage"
               run: uv run pytest --cov --cov-report json
 
+            - name: "Attach workflow summary"
+              run: mdparser parse -t "files/*/summary" coverage.json table >> $GITHUB_STEP_SUMMARY
+
             - name: "Prettify json report"
               run: uv run -m json.tool coverage.json report.json
 

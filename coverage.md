@@ -1,0 +1,11 @@
+||covered_lines|num_statements|percent_covered|percent_covered_display|missing_lines|excluded_lines|percent_statements_covered|percent_statements_covered_display|
+|-|-|-|-|-|-|-|-|-|
+|src/sqlitera/__init__.py|0|0|100.0|100|0|0|100.0|100|
+|src/sqlitera/operations.py|37|37|100.0|100|0|7|100.0|100|
+|src/sqlitera/protocols.py|5|5|100.0|100|0|40|100.0|100|
+|src/sqlitera/schemes/__init__.py|0|0|100.0|100|0|0|100.0|100|
+|src/sqlitera/schemes/columns.py|53|53|100.0|100|0|0|100.0|100|
+|src/sqlitera/schemes/tables.py|13|13|100.0|100|0|4|100.0|100|
+|tests/sqlitera/schemes/test_columns.py|44|44|100.0|100|0|0|100.0|100|
+|tests/sqlitera/schemes/test_tables.py|17|17|100.0|100|0|0|100.0|100|
+|tests/sqlitera/test_operations.py|64|64|100.0|100|0|2|100.0|100|

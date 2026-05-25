@@ -32,21 +32,22 @@ def parse_file(path: pathlib.Path) -> dict[str, Any]:
 def split_obj_path(path: str, delim: str = "/") -> list[str]:
 	if path == ".":
 		return []
-	return path.split(delim)
+	return path.strip(delim).split(delim)
 
 
 def deep_get(target: Mapping[str, Any], path: Sequence[str]) -> Any:
 	return functools.reduce(lambda d, k: d[k], path, target)
 
 
-def resolve_wildcard(
+def resolve_path(
 	target: Mapping[str, Any], path: Sequence[str]
 ) -> dict[str, Any]:
 	if "*" not in path:
 		return deep_get(target, path)
 
 	i = path.index("*")
+	pre_ast, post_ast = path[:i], path[i + 1 :]
 
-	wc_space: Mapping[str, Mapping[str, Any]] = deep_get(target, path[:i])
+	space: Mapping[str, Any] = deep_get(target, pre_ast)
 
-	return {k: resolve_wildcard(v, path[i + 1 :]) for k, v in wc_space.items()}
+	return {k: resolve_path(v, post_ast) for k, v in space.items()}
