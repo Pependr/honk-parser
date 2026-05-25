@@ -14,11 +14,16 @@ jobs:
             - name: "Install UV"
               uses: astral-sh/setup-uv@v7
 
+            - name: "Setup venv"
+              run: |
+                uv venv
+                source ./.venv/bin/activate.fish
+
             - name: "Setup Python"
               run: uv python install 3.14.4
 
             - name: "Install dependencies"
-              run: uv sync --dev
+              run: uv sync
 
             - name: "Run Ruff checker"
               run: uv run ruff check --show-fixes
