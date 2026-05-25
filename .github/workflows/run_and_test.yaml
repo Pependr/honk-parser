@@ -14,10 +14,10 @@ jobs:
             - name: "Install UV"
               uses: astral-sh/setup-uv@v7
 
-            - name: "Setup venv"
-              run: |
-                uv venv
-                source ./.venv/bin/activate.fish
+            # - name: "Setup venv"
+            #   run: |
+            #     uv venv
+            #     source ./.venv/bin/activate.fish
 
             - name: "Setup Python"
               run: uv python install 3.14.4
