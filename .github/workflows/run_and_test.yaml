@@ -14,11 +14,6 @@ jobs:
             - name: "Install UV"
               uses: astral-sh/setup-uv@v7
 
-            # - name: "Setup venv"
-            #   run: |
-            #     uv venv
-            #     source ./.venv/bin/activate.fish
-
             - name: "Setup Python"
               run: uv python install 3.14.4
 
@@ -33,9 +28,6 @@ jobs:
 
             - name: "Run Pytest and collect coverage"
               run: uv run pytest --cov --cov-report json
-
-            - name: "Attach workflow summary"
-              run: mdparser parse -t "files/*/summary" coverage.json table >> $GITHUB_STEP_SUMMARY
 
             - name: "Prettify json report"
               run: uv run -m json.tool coverage.json report.json
