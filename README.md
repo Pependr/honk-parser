@@ -2,8 +2,7 @@
 
 ## ToDo
 
-- Pytests
 - Finish table pipeline
+- Pytests
 - Plugin architecture
 - Standart plugin
-- Cleanup buildlib

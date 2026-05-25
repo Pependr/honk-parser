@@ -25,9 +25,7 @@ def test_parse_file_json(mock_path: pm.MockType) -> None:
 
 def test_parse_file_toml(mock_path: pm.MockType) -> None:
 	mock_path.as_posix.return_value = "mock.toml"
-	mock_path.read_text.return_value = (
-		"""bruh = 69\ndude = 6.7\nman = 'shit'\n"""
-	)
+	mock_path.read_text.return_value = "bruh = 69\ndude = 6.7\nman = 'shit'\n"
 
 	assert pl.parse_file(mock_path) == {"bruh": 69, "dude": 6.7, "man": "shit"}
 	mock_path.as_posix.assert_called_once()
@@ -53,3 +51,54 @@ def test_deep_get() -> None:
 	assert pl.deep_get({"key": 0}, ["key"]) == 0
 	assert pl.deep_get({"key1": {"key2": 0}}, ["key1", "key2"]) == 0
 	assert pl.deep_get({"key1": {"key2": 0, "key3": 1}}, ["key1", "key2"]) == 0
+	assert pl.deep_get({"key1": 0}, []) == {"key1": 0}
+	assert pl.deep_get(0, []) == 0  # type: ignore
+
+
+def test_resolve_wildcard() -> None:
+	assert pl.resolve_wildcard(
+		{
+			"files": {
+				"test_bruh.py": {
+					"functions": "bruh_functions",
+					"classes": "bruh_classes",
+					"summary": "bruh_summary",
+				},
+				"test_dude.py": {
+					"functions": "dude_functions",
+					"classes": "dude_classes",
+					"summary": "dude_summary",
+				},
+			}
+		},
+		["files", "*", "summary"],
+	) == {"test_bruh.py": "bruh_summary", "test_dude.py": "dude_summary"}
+
+	assert pl.resolve_wildcard(
+		{"files": {"test_bruh.py": {"summary": "bruh_summary"}}},
+		["files", "test_bruh.py", "summary"],
+	) == pl.deep_get(
+		{"files": {"test_bruh.py": {"summary": "bruh_summary"}}},
+		["files", "test_bruh.py", "summary"],
+	)
+
+	assert pl.resolve_wildcard(
+		{
+			"files": {
+				"test_bruh.py": {
+					"functions": {"missed": 10},
+					"classes": {"missed": 16},
+					"summary": {"missed": 26},
+				},
+				"test_dude.py": {
+					"functions": {"missed": 69},
+					"classes": {"missed": 0},
+					"summary": {"missed": 69},
+				},
+			}
+		},
+		["files", "*", "*", "missed"],
+	) == {
+		"test_bruh.py": {"functions": 10, "classes": 16, "summary": 26},
+		"test_dude.py": {"functions": 69, "classes": 0, "summary": 69},
+	}
