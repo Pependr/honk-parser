@@ -2,4 +2,4 @@
 
 ## ToDo
 
-- Pytests
+- Rename project

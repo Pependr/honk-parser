@@ -10,7 +10,7 @@ from typing import Generator
 from mdparser import parselib
 
 
-@click.group("root")
+@click.group("root", help="A tool for parsing and filtering data")
 @click.pass_context
 def root(ctx: click.Context) -> None:
 	plugins = pathlib.Path("plugins.json")
@@ -28,11 +28,17 @@ def root(ctx: click.Context) -> None:
 		importlib.import_module(plugin)
 
 
-@root.group("parse")
+@root.group(
+	"parse", help="Parse data from a file accordingly to the chosen template"
+)
 @click.pass_context
 @click.argument("path", type=click.Path(dir_okay=False, path_type=pathlib.Path))
-@click.option("-t", "--target", default=".")
-@click.option("-d", "--delim", default="/")
+@click.option(
+	"-t", "--target", default=".", help="The target object in the file"
+)
+@click.option(
+	"-d", "--delim", default="/", help="The delimeter symbol in the target path"
+)
 def parse_group(
 	ctx: click.Context, path: pathlib.Path, target: str, delim: str
 ) -> None:
@@ -41,7 +47,7 @@ def parse_group(
 	)
 
 
-@root.group("plugin")
+@root.group("plugin", help="Manage your plugins")
 @click.pass_context
 def plugin_group(ctx: click.Context) -> None:
 	path: pathlib.Path = ctx.obj["PLUGINS"]
@@ -83,3 +89,12 @@ def unload(ctx: click.Context, module: str) -> None:
 			ctx.fail(f"Plugin {module} is not loaded")
 
 		loaded.remove(module)
+
+
+@plugin_group.command("list")
+@click.pass_context
+def list_loaded(ctx: click.Context) -> None:
+	with get_loaded() as loaded:
+		click.echo("Loaded plugins:")
+		for plugin in loaded:
+			click.echo(f"- {plugin}")
