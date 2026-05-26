@@ -72,7 +72,10 @@ def test_resolve_path() -> None:
 			}
 		},
 		["files", "*", "summary"],
-	) == {"test_bruh.py": "bruh_summary", "test_dude.py": "dude_summary"}
+	) == {
+		"test_bruh.py": {"summary": "bruh_summary"},
+		"test_dude.py": {"summary": "dude_summary"},
+	}
 
 	assert pl.resolve_path(
 		{"files": {"test_bruh.py": {"summary": "bruh_summary"}}},
@@ -99,6 +102,28 @@ def test_resolve_path() -> None:
 		},
 		["files", "*", "*", "missed"],
 	) == {
-		"test_bruh.py": {"functions": 10, "classes": 16, "summary": 26},
-		"test_dude.py": {"functions": 69, "classes": 0, "summary": 69},
+		"test_bruh.py": {
+			"functions": {"missed": 10},
+			"classes": {"missed": 16},
+			"summary": {"missed": 26},
+		},
+		"test_dude.py": {
+			"functions": {"missed": 69},
+			"classes": {"missed": 0},
+			"summary": {"missed": 69},
+		},
 	}
+
+
+def test_match_wildcard() -> None:
+	assert pl.match_wildcard("bruh", "bruh")
+	assert not pl.match_wildcard("bruh", "dude")
+	assert pl.match_wildcard("*_display", "percent_display")
+	assert not pl.match_wildcard("*_display", "_display_stuff")
+	assert pl.match_wildcard("covered_*", "covered_lines")
+	assert not pl.match_wildcard("covered_*", "got_you_covered_")
+	assert pl.match_wildcard("*exclude*", "that_exclude_thing")
+	assert pl.match_wildcard("that*exclude*", "that_exclude_thing")
+	assert pl.match_wildcard("*exclude*thing", "that_exclude_thing")
+	assert pl.match_wildcard("that*thing", "that_exclude_thing")
+	assert pl.match_wildcard("*", "bruh") and pl.match_wildcard("*", "dude")
