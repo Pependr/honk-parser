@@ -3,6 +3,7 @@ import pytest_mock as pm
 
 import json
 import pathlib
+import tomllib
 
 from mdparser import parselib as pl
 
@@ -13,6 +14,8 @@ def mock_path(mocker: pm.MockerFixture) -> pm.MockType:
 
 
 def test_parse_file_json(mock_path: pm.MockType) -> None:
+	pl.parser("json")(json.loads)
+
 	mock_path.as_posix.return_value = "mock.json"
 	mock_path.read_text.return_value = json.dumps(
 		{"bruh": 69, "dude": 6.7, "man": None}
@@ -24,6 +27,8 @@ def test_parse_file_json(mock_path: pm.MockType) -> None:
 
 
 def test_parse_file_toml(mock_path: pm.MockType) -> None:
+	pl.parser("toml")(tomllib.loads)
+
 	mock_path.as_posix.return_value = "mock.toml"
 	mock_path.read_text.return_value = "bruh = 69\ndude = 6.7\nman = 'shit'\n"
 

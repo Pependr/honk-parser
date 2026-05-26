@@ -2,6 +2,4 @@
 
 ## ToDo
 
-- Plugin architecture
-- Standart plugin
 - Pytests
