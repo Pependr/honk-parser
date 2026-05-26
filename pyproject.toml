@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-mdparser = "honk.main:root"
+honk = "honk.main:root"
 
 [build-system]
 requires = ["uv_build>=0.11.15,<0.12.0"]
@@ -20,7 +20,7 @@ build-backend = "uv_build"
 
 [tool.uv.build-backend]
 module-root = "src"
-module-name = "honk"
+module-name = ["honk", "stdplugin"]
 source-include = ["tests/**", "README.md"]
 
 [dependency-groups]

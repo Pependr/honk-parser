@@ -63,7 +63,7 @@ wheels = [
 ]
 
 [[package]]
-name = "fileparser"
+name = "honk"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
