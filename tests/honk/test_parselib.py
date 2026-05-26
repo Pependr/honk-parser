@@ -5,7 +5,7 @@ import json
 import pathlib
 import tomllib
 
-from fileparser import parselib as pl
+from honk import parselib as pl
 
 
 @pt.fixture

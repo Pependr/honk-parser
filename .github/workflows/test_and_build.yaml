@@ -36,5 +36,19 @@ jobs:
               uses: actions/upload-artifact@v7
               with:
                 name: "Coverage report"
-                path: "./report.json"
+                path: "report.json"
                 archive: false
+
+    build_and_upload:
+      runs-on: "ubuntu-latest"
+      needs: run_and_test
+
+      steps:
+        - name: "Build the package"
+          run: uv build
+
+        - name: "Upload build artifacts"
+          uses: actions/upload-artifact@v7
+          with:
+            name: "Build"
+            path: "dict/"

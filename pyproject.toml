@@ -1,5 +1,5 @@
 [project]
-name = "fileparser"
+name = "honk"
 version = "0.1.0"
 description = "A tool that parses your data into whatever you desire"
 readme = "README.md"
@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-mdparser = "fileparser.main:root"
+mdparser = "honk.main:root"
 
 [build-system]
 requires = ["uv_build>=0.11.15,<0.12.0"]
@@ -20,7 +20,7 @@ build-backend = "uv_build"
 
 [tool.uv.build-backend]
 module-root = "src"
-module-name = "fileparser"
+module-name = "honk"
 source-include = ["tests/**", "README.md"]
 
 [dependency-groups]

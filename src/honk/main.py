@@ -7,7 +7,7 @@ import contextlib
 
 from typing import Generator
 
-from fileparser import parselib
+from honk import parselib
 
 
 @click.group("root", help="A tool for parsing and filtering data")
