@@ -7,7 +7,7 @@ import contextlib
 
 from typing import Generator
 
-from mdparser import parselib
+from fileparser import parselib
 
 
 @click.group("root", help="A tool for parsing and filtering data")

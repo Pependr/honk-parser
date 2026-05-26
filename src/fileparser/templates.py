@@ -4,7 +4,7 @@ import functools
 
 from typing import Any, Callable
 
-from mdparser import main
+from fileparser import main
 
 
 def template[T](

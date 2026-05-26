@@ -6,7 +6,7 @@ import itertools
 
 from typing import Any, Mapping, KeysView, Sequence
 
-from mdparser import parselib, templates
+from fileparser import parselib, templates
 
 
 def to_exclude(i: str, exclude: tuple[str, ...]) -> bool:
