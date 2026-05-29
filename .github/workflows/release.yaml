@@ -81,24 +81,24 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
 
   
-  # pypi-publish:
-  #   name: Upload release to PyPI
-  #   runs-on: [ubuntu-latest, testpypi-publish]
-  #   needs: setup_and_build
+  pypi-publish:
+    name: Upload release to PyPI
+    runs-on: [ubuntu-latest, testpypi-publish]
+    needs: setup_and_build
 
-  #   environment:
-  #     name: pypi
-  #     url: https://pypi.org/project/${{ github.repository }}
+    environment:
+      name: pypi
+      url: https://pypi.org/project/${{ github.repository }}
 
-  #   permissions:
-  #     id-token: write
+    permissions:
+      id-token: write
     
-  #   steps:
-  #     - name: Download all the dists
-  #       uses: actions/download-artifact@v6
-  #       with:
-  #         name: python-package-distributions
-  #         path: dist/
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v6
+        with:
+          name: python-package-distributions
+          path: dist/
 
-  #     - name: Publish distribution 📦 to PyPI
-  #       uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Publish distribution 📦 to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
