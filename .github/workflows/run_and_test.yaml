@@ -5,7 +5,7 @@ on:
             - "main"
 
 jobs:
-    test_and_build:
+    run_and_test:
         runs-on: "ubuntu-latest"
         
         steps:
@@ -38,12 +38,3 @@ jobs:
                 name: "Coverage report"
                 path: "report.json"
                 archive: false
-                
-            - name: "Build the package"
-              run: uv build
-
-            - name: "Upload build artifacts"
-              uses: actions/upload-artifact@v7
-              with:
-                name: "Build"
-                path: "dist/"
