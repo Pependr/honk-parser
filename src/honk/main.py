@@ -1,5 +1,6 @@
 import click
 
+import sys
 import json
 import pathlib
 import importlib
@@ -18,13 +19,15 @@ def root(ctx: click.Context) -> None:
 	ctx.ensure_object(dict)
 	ctx.obj["PLUGINS"] = plugins
 
+	sys.path.append(str(pathlib.Path.cwd().resolve()))
+
 	if not plugins.exists():
 		importlib.import_module("stdplugin")
 		return
 
-	to_load: list[str] = json.loads(plugins.read_text())
+	loaded: list[str] = json.loads(plugins.read_text())
 
-	for plugin in to_load:
+	for plugin in loaded:
 		importlib.import_module(plugin)
 
 
@@ -58,7 +61,6 @@ def plugin_group(ctx: click.Context) -> None:
 
 
 @contextlib.contextmanager
-@click.pass_context
 def get_loaded(ctx: click.Context) -> Generator[list[str], None, None]:
 	path: pathlib.Path = ctx.obj["PLUGINS"]
 
@@ -73,7 +75,7 @@ def get_loaded(ctx: click.Context) -> Generator[list[str], None, None]:
 @click.pass_context
 @click.argument("module")
 def load(ctx: click.Context, module: str) -> None:
-	with get_loaded() as loaded:
+	with get_loaded(ctx) as loaded:
 		if module in loaded:
 			ctx.fail(f"Plugin {module} is already loaded")
 
@@ -84,7 +86,7 @@ def load(ctx: click.Context, module: str) -> None:
 @click.pass_context
 @click.argument("module")
 def unload(ctx: click.Context, module: str) -> None:
-	with get_loaded() as loaded:
+	with get_loaded(ctx) as loaded:
 		if module not in loaded:
 			ctx.fail(f"Plugin {module} is not loaded")
 
@@ -94,7 +96,7 @@ def unload(ctx: click.Context, module: str) -> None:
 @plugin_group.command("list")
 @click.pass_context
 def list_loaded(ctx: click.Context) -> None:
-	with get_loaded() as loaded:
+	with get_loaded(ctx) as loaded:
 		click.echo("Loaded plugins:")
 		for plugin in loaded:
 			click.echo(f"- {plugin}")

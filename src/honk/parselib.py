@@ -23,7 +23,7 @@ class UnsupportedExtension(ValueError): ...
 
 
 def parse_file(path: pathlib.Path) -> dict[str, Any]:
-	_, ext = path.as_posix().split(".")
+	*_, ext = path.as_posix().split(".")
 
 	parser = PARSE_STRATS.get(ext)
 
@@ -43,9 +43,7 @@ def deep_get(target: Mapping[str, Any], path: Sequence[str]) -> Any:
 	return functools.reduce(lambda d, k: d[k], path, target)
 
 
-def resolve_path(
-	target: Mapping[str, Any], path: Sequence[str]
-) -> dict[str, Any] | Any:
+def resolve_path(target: Mapping[str, Any], path: Sequence[str]) -> Any:
 	if "*" not in path:
 		return deep_get(target, path)
 
