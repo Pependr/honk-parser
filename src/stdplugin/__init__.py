@@ -49,7 +49,7 @@ def map_map(
 
 	rows: list[str] = [k for k in raw_rows if not to_exclude(k, excluded_row)]
 	columns: list[str] = [
-		k for k in raw_rows if not to_exclude(k, excluded_col)
+		k for k in raw_columns if not to_exclude(k, excluded_col)
 	]
 
 	cols: str = f"|{header}|{"|".join(columns)}|"
