@@ -63,7 +63,7 @@ jobs:
 
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/honk-parser
+      url: https://test.pypi.org/project/${{ github.repository }}
 
     permissions:
       id-token: write
