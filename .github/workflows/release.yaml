@@ -88,7 +88,7 @@ jobs:
 
   #   environment:
   #     name: pypi
-  #     url: https://pypi.org/p/honk-parser
+  #     url: https://pypi.org/project/${{ github.repository }}
 
   #   permissions:
   #     id-token: write

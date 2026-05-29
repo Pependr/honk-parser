@@ -1,5 +1,5 @@
 [project]
-name = "honk"
+name = "honk-parser"
 version = "0.1.0"
 description = "A tool that parses your data into whatever you desire"
 readme = "README.md"
