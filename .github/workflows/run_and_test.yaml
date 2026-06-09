@@ -13,12 +13,13 @@ jobs:
 
             - name: "Install uv"
               uses: astral-sh/setup-uv@v7
-
-            - name: "Setup Python"
-              run: uv python install 3.14.4
+              with:
+                enable-cache: true
+                cache-local-path: "**/.uv_cache"
+                python-version: '3.14.4'
 
             - name: "Install dependencies"
-              run: uv sync
+              run: uv sync --frozen
 
             - name: "Run Ruff checker"
               run: uv run ruff check --show-fixes
@@ -26,7 +27,10 @@ jobs:
             - name: "Run Ruff linter"
               run: uv run ruff format --check
 
-            - name: "Run Pytest and collect coverage"
+            - name: "Run Pytest"
+              run: uv run pytest --tb=short --cov
+
+            - name: "Collect coverage report"
               run: uv run pytest --cov --cov-report json
 
             - name: "Prettify json report"

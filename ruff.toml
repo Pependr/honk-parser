@@ -14,7 +14,7 @@ exclude = [
     "__pycache__",
     "uv.lock",
 ]
-indent-style = "tab"
+indent-style = "space"
 quote-style = "double"
 nested-string-quote-style = "preferred"
 skip-magic-trailing-comma = false
@@ -48,5 +48,5 @@ length-sort = true
 
 
 [lint.isort.sections]
-testing = ["pytest", "pytest_mock", "unittest"]
+testing = ["pytest", "pytest_mock", "unittest", "click.testing"]
 typing = ["typing", "types", "collections.abc"]

@@ -1,88 +1,114 @@
-import pathlib
 import functools
 
-from typing import Any, Callable, Sequence
+from typing import Any, Callable, Protocol, Sequence, SupportsIndex, cast
 from collections.abc import Mapping
 
 
-type ParseStrat = Callable[[str], dict[str, Any]]
+class SupportsStr(Protocol):
+    def __str__(self) -> str: ...
+
+
+type NestedData = Mapping[str, Any] | Sequence[Any]
+type NestedPath = Sequence[str | SupportsIndex]
+type ParseStrat = Callable[[str], NestedData]
 
 
 PARSE_STRATS: dict[str, ParseStrat] = {}
 
 
 def parser(ext: str) -> Callable[[ParseStrat], ParseStrat]:
-	def decorator(fn: ParseStrat) -> ParseStrat:
-		PARSE_STRATS[ext] = fn
-		return fn
+    def decorator(fn: ParseStrat) -> ParseStrat:
+        PARSE_STRATS[ext] = fn
+        return fn
 
-	return decorator
-
-
-class UnsupportedExtension(ValueError): ...
+    return decorator
 
 
-def parse_file(path: pathlib.Path) -> dict[str, Any]:
-	*_, ext = path.as_posix().split(".")
-
-	parser = PARSE_STRATS.get(ext)
-
-	if parser is None:
-		raise UnsupportedExtension(f"Extension .{ext} is unsupported")
-
-	return parser(path.read_text())
+def get_extension(path: SupportsStr) -> str:
+    return str(path).split(".")[-1]
 
 
-def split_obj_path(path: str, delim: str = "/") -> list[str]:
-	if path == ".":
-		return []
-	return path.strip(delim).split(delim)
+def parse(text: str, method: str) -> NestedData:
+    parser = PARSE_STRATS.get(method)
+
+    if parser is None:
+        raise ValueError(f"No such parsing method: {method}")
+
+    return parser(text)
 
 
-def deep_get(target: Mapping[str, Any], path: Sequence[str]) -> Any:
-	return functools.reduce(lambda d, k: d[k], path, target)
+def split_obj_path(path: str, delim: str = "/") -> tuple[str | int, ...]:
+    if path == ".":
+        return ()
+
+    def transform(x: str) -> str | int:
+        if x.isdecimal():
+            return int(x)
+        return x
+
+    raw = path.strip(delim).split(delim)
+
+    return tuple(map(transform, raw))
 
 
-def resolve_path(target: Mapping[str, Any], path: Sequence[str]) -> Any:
-	if "*" not in path:
-		return deep_get(target, path)
-
-	i = path.index("*")
-	pre_ast, post_ast = path[:i], path[i + 1 :]
-
-	space: Mapping[str, Any] = deep_get(target, pre_ast)
-
-	data = {k: resolve_path(v, post_ast) for k, v in space.items()}
-
-	if path[-1] != "*":
-		for k, v in data.items():
-			if isinstance(v, Mapping):
-				continue
-			data[k] = {path[-1]: v}
-
-	return data
+def deep_get(target: NestedData, path: NestedPath) -> Any:
+    return functools.reduce(lambda d, k: d[k], path, target)  # type: ignore
 
 
-def match_wildcard(pattern: str, string: str) -> bool:
-	if "*" not in pattern:
-		return string.endswith(pattern)
+def split_sequence[T](
+    seq: Sequence[T], delim: T, *, maxsplit: int | None = None
+) -> tuple[Sequence[T], ...]:
+    if maxsplit is None:
+        maxsplit = seq.count(delim)
 
-	i = pattern.find("*")
-	pre_ast, post_ast = pattern[:i], pattern[i + 1 :]
+    if maxsplit == 0:
+        return (seq,)
 
-	if "*" not in post_ast:
-		return string.startswith(pre_ast) and string.endswith(post_ast)
+    i = seq.index(delim)
 
-	s = string.removeprefix(pre_ast)
+    return (
+        seq[:i],
+        *split_sequence(seq[i + 1 :], delim, maxsplit=(maxsplit - 1)),
+    )
 
-	nxt, *_ = post_ast.split("*")
 
-	while not s.startswith(nxt):
-		s = s[1:]
+def resolve_path(target: NestedData, path: NestedPath, delim: str = "*") -> Any:
+    if delim not in path:
+        return deep_get(target, path)
 
-		if s == "":
-			break
-	else:
-		return string.startswith(pre_ast) and match_wildcard(post_ast, s)
+    pre, post = split_sequence(path, delim, maxsplit=1)
 
-	return False
+    def wrap(x: Any) -> Any:
+        if path[-1] == delim:
+            return x
+
+        resolved = resolve_path(x, post)
+
+        if isinstance(resolved, Mapping):
+            return cast(Mapping[str, Any], resolved)
+
+        return {path[-1]: resolved}
+
+    space: Mapping[str, Any] = deep_get(target, pre)
+
+    return {k: wrap(v) for k, v in space.items()}
+
+
+def match_wildcard(pattern: str, string: str, delim: str = "*") -> bool:
+    if delim not in pattern:
+        return string == pattern
+
+    pre, post = pattern.split(delim, maxsplit=1)
+
+    if not string.startswith(pre):
+        return False
+
+    if delim not in post:
+        return string.endswith(post)
+
+    mid, _ = post.split(delim, maxsplit=1)
+
+    while not string.startswith(mid):
+        string = string[1:]
+
+    return match_wildcard(post, string, delim)

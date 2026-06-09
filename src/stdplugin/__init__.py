@@ -6,101 +6,101 @@ import itertools
 
 from typing import Any, Mapping, Iterable, Sequence
 
-from honk import parselib, templates
+import honk
 
 
 def to_exclude(i: str, exclude: tuple[str, ...]) -> bool:
-	return any(parselib.match_wildcard(e, i) for e in exclude)
+    return any(honk.parselib.match_wildcard(e, i) for e in exclude)  # type: ignore
 
 
-parselib.parser("json")(json.loads)
-parselib.parser("toml")(tomllib.loads)
+honk.parser("json")(json.loads)
+honk.parser("toml")(tomllib.loads)
 
 
-@templates.template(help="Print the parsed data as is")
+@honk.template(help="Print the parsed data as is")
 def printf(data: Any) -> None:
-	click.echo(data)
+    click.echo(data)
 
 
-@templates.template("json", help="Print the parsed data in json format")
+@honk.template("json", help="Print the parsed data in json format")
 def to_json(data: Any) -> None:
-	click.echo(json.dumps(data))
+    click.echo(json.dumps(data))
 
 
-@templates.template(help="Parses nested mappings")
+@honk.template(help="Parses nested mappings")
 @click.option("--header", default="")
 @click.option("--excluded-col", multiple=True)
 @click.option("--excluded-row", multiple=True)
 @click.option("-s", "--swap", help="Swaps columns and rows", is_flag=True)
 def map_map(
-	data: Mapping[str, Mapping[str, Any]],
-	header: str,
-	excluded_col: tuple[str, ...],
-	excluded_row: tuple[str, ...],
-	swap: bool,
+    data: Mapping[str, Mapping[str, Any]],
+    header: str,
+    excluded_col: tuple[str, ...],
+    excluded_row: tuple[str, ...],
+    swap: bool,
 ) -> None:
-	raw_rows: Iterable[str] = data.keys()
-	raw_columns: Iterable[str] = {
-		key for inner in data.values() for key in inner
-	}
+    raw_rows: Iterable[str] = data.keys()
+    raw_columns: Iterable[str] = {
+        key for inner in data.values() for key in inner
+    }
 
-	if swap:
-		raw_rows, raw_columns = raw_columns, raw_rows
+    if swap:
+        raw_rows, raw_columns = raw_columns, raw_rows
 
-	rows: list[str] = [k for k in raw_rows if not to_exclude(k, excluded_row)]
-	columns: list[str] = [
-		k for k in raw_columns if not to_exclude(k, excluded_col)
-	]
+    rows: list[str] = [k for k in raw_rows if not to_exclude(k, excluded_row)]
+    columns: list[str] = [
+        k for k in raw_columns if not to_exclude(k, excluded_col)
+    ]
 
-	cols: str = f"|{header}|{"|".join(columns)}|"
-	line: str = f"|{"|".join("-" * (len(columns) + 1))}|"
+    cols: str = f"|{header}|{"|".join(columns)}|"
+    line: str = f"|{"|".join("-" * (len(columns) + 1))}|"
 
-	head: str = f"{cols}\n{line}\n"
+    head: str = f"{cols}\n{line}\n"
 
-	def get(k1: str, k2: str) -> Any:
-		if k1 in data.keys():
-			return data[k1].get(k2)
-		return data[k2].get(k1)
+    def get(k1: str, k2: str) -> Any:
+        if k1 in data.keys():
+            return data[k1].get(k2)
+        return data[k2].get(k1)
 
-	body: list[str] = [
-		f"|{row}|{"|".join(str(get(row, col)) for col in columns)}|"
-		for row in rows
-	]
+    body: list[str] = [
+        f"|{row}|{"|".join(str(get(row, col)) for col in columns)}|"
+        for row in rows
+    ]
 
-	click.echo(head + "\n".join(body) + "\n")
+    click.echo(head + "\n".join(body) + "\n")
 
 
-@templates.template(help="Parses a mapping of arrays")
+@honk.template(help="Parses a mapping of arrays")
 @click.option("-e", "--excluded", multiple=True)
 def map_arr(
-	data: Mapping[str, Sequence[Any]], excluded: tuple[str, ...]
+    data: Mapping[str, Sequence[Any]], excluded: tuple[str, ...]
 ) -> None:
-	result: list[str] = []
+    result: list[str] = []
 
-	keys = list(filter(lambda i: not to_exclude(i, excluded), data.keys()))
+    keys = list(filter(lambda i: not to_exclude(i, excluded), data.keys()))
 
-	result.append(f"|{"|".join(keys)}|")
+    result.append(f"|{"|".join(keys)}|")
 
-	result.append(f"|{"|".join("-" * len(keys))}|")
+    result.append(f"|{"|".join("-" * len(keys))}|")
 
-	for row in itertools.zip_longest(*map(lambda k: data[k], keys)):
-		result.append(f"|{"|".join(map(str, row))}|")
+    for row in itertools.zip_longest(*map(lambda k: data[k], keys)):
+        result.append(f"|{"|".join(map(str, row))}|")
 
-	click.echo("\n".join(result) + "\n")
+    click.echo("\n".join(result) + "\n")
 
 
-@templates.template(help="Parses arrays of mappings")
+@honk.template(help="Parses arrays of mappings")
 @click.option("-e", "--excluded", multiple=True)
 def arr_map(
-	data: Sequence[Mapping[str, Any]], excluded: tuple[str, ...]
+    data: Sequence[Mapping[str, Any]], excluded: tuple[str, ...]
 ) -> None:
-	columns: list[str] = list(data[0].keys())
+    columns: list[str] = list(data[0].keys())
 
-	cols: str = f"|{"|".join(columns)}|"
-	line: str = f"|{"|".join("-" * len(columns))}|"
+    cols: str = f"|{"|".join(columns)}|"
+    line: str = f"|{"|".join("-" * len(columns))}|"
 
-	head: str = f"{cols}\n{line}\n"
+    head: str = f"{cols}\n{line}\n"
 
-	body: list[str] = [f"|{"|".join(map(str, row.values()))}|" for row in data]
+    body: list[str] = [f"|{"|".join(map(str, row.values()))}|" for row in data]
 
-	click.echo(head + "\n".join(body) + "\n")
+    click.echo(head + "\n".join(body) + "\n")

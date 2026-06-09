@@ -4,7 +4,8 @@
     "explorer.confirmDragAndDrop": false,
     "python.languageServer": "Pylance",
     "python.analysis.extraPaths": [
-        "{$workspaceFolder}/src"
+        "{$workspaceFolder}/src",
+        "{$workspaceFolder}/tests"
     ],
     "ruff.format.backend": "uv",
     "ruff.lineLength": 80,
