@@ -31,6 +31,7 @@ def test_split_obj_path() -> None:
     assert pl.split_obj_path(".") == ()
     assert pl.split_obj_path("path/to/obj") == ("path", "to", "obj")
     assert pl.split_obj_path("my.delim.path", ".") == ("my", "delim", "path")
+    assert pl.split_obj_path("key/4/item") == ("key", 4, "item")
 
 
 def test_deep_get() -> None:
@@ -97,6 +98,35 @@ def test_resolve_path() -> None:
             "functions": {"missed": 69},
             "classes": {"missed": 0},
             "summary": {"missed": 69},
+        },
+    }
+
+    assert pl.resolve_path(
+        {
+            "files": {
+                "test_bruh.py": {
+                    "functions": "bruh_functions",
+                    "classes": "bruh_classes",
+                    "summary": "bruh_summary",
+                },
+                "test_dude.py": {
+                    "functions": "dude_functions",
+                    "classes": "dude_classes",
+                    "summary": "dude_summary",
+                },
+            }
+        },
+        ["files", "*"],
+    ) == {
+        "test_bruh.py": {
+            "functions": "bruh_functions",
+            "classes": "bruh_classes",
+            "summary": "bruh_summary",
+        },
+        "test_dude.py": {
+            "functions": "dude_functions",
+            "classes": "dude_classes",
+            "summary": "dude_summary",
         },
     }
 
