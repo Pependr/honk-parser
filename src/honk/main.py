@@ -14,12 +14,12 @@ from honk import parselib
 @click.group("root", help="A tool for parsing and filtering data")
 @click.pass_context
 def root(ctx: click.Context) -> None:
+    sys.path.append(str(pathlib.Path.cwd().resolve()))
+
     plugins = pathlib.Path("plugins.json")
 
     ctx.ensure_object(dict)
     ctx.obj["PLUGINS"] = plugins
-
-    sys.path.append(str(pathlib.Path.cwd().resolve()))
 
     if not plugins.exists():
         importlib.import_module("stdplugin")
@@ -31,11 +31,11 @@ def root(ctx: click.Context) -> None:
         importlib.import_module(plugin)
 
 
-@root.group("parse", help="Parse data from a file or strdin")
+@root.group("parse", help="Parse data from a file or stdin")
 @click.pass_context
 @click.option(
     "-p",
-    "path",
+    "--path",
     type=click.Path(dir_okay=False, path_type=pathlib.Path),
     default=None,
     help="Path to the file to read from, read from stdin if omitted",

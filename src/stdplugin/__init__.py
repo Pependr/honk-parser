@@ -7,10 +7,11 @@ import itertools
 from typing import Any, Mapping, Iterable, Sequence
 
 import honk
+import honk.parselib
 
 
 def to_exclude(i: str, exclude: tuple[str, ...]) -> bool:
-    return any(honk.parselib.match_wildcard(e, i) for e in exclude)  # type: ignore
+    return any(honk.parselib.match_wildcard(e, i) for e in exclude)
 
 
 honk.parser("json")(json.loads)
@@ -18,7 +19,7 @@ honk.parser("toml")(tomllib.loads)
 
 
 @honk.template(help="Print the parsed data as is")
-def printf(data: Any) -> None:
+def echo(data: Any) -> None:
     click.echo(data)
 
 
