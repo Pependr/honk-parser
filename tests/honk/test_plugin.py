@@ -2,10 +2,13 @@ import pytest
 
 import json
 import pathlib
+import subprocess
 
 from typing import Any
 
-import conftest
+
+MOCK_PLUGIN_PATH = pathlib.Path.cwd() / "tests" / "honk" / "mock_plugin.py"
+PLUGINS = "plugins.json"
 
 
 def parse_json(path: pathlib.Path) -> Any:
@@ -16,115 +19,124 @@ def write_json(path: pathlib.Path, data: Any) -> None:
     path.write_text(json.dumps(data))
 
 
-def test_plugin_list(
-    runner: conftest.Runner, subtests: pytest.Subtests
-) -> None:
-    with conftest.isolated_path(runner) as iso:
-        mock_plugin = iso / "mock_plugin.py"
-        mock_plugin.touch()
+def test_plugin_list(tmp_path: pathlib.Path, subtests: pytest.Subtests) -> None:
+    mock_plugin = tmp_path / "mock_plugin.py"
+    mock_plugin.touch()
 
-        plugin_path = iso / "plugins.json"
+    plugins_path = tmp_path / PLUGINS
 
-        with subtests.test("Error on listing plugins before loading"):
-            result = conftest.invoke_root(runner, "plugin", "list")
+    with subtests.test("Testing list without loaded plugins"):
+        result = subprocess.run(
+            ["honk", "plugin", "list"],
+            capture_output=True,
+            text=True,
+            cwd=tmp_path,
+        )
 
-            assert result.exit_code == 0
-            assert result.output == "Loaded plugins:\n- stdplugin\n"
-            assert plugin_path.exists()
+        result.check_returncode()
+        assert result.stdout == "Loaded plugins:\n- stdplugin\n"
+        assert plugins_path.exists()
+        assert parse_json(plugins_path) == ["stdplugin"]
 
-        write_json(plugin_path, ["mock_plugin"])
+    write_json(plugins_path, ["mock_plugin"])
 
-        with subtests.test("Error on listing modyfied plugins file"):
-            result = conftest.invoke_root(runner, "plugin", "list")
+    with subtests.test("Testing list on a modyfied plugins file"):
+        result = subprocess.run(
+            ["honk", "plugin", "list"],
+            capture_output=True,
+            text=True,
+            cwd=tmp_path,
+        )
 
-            assert result.exit_code == 0
-            assert result.output == "Loaded plugins:\n- mock_plugin\n"
+        result.check_returncode()
+        assert result.stdout == "Loaded plugins:\n- mock_plugin\n"
 
-        write_json(plugin_path, [])
+    write_json(plugins_path, [])
 
-        with subtests.test("Error on listing empty plugins file"):
-            result = conftest.invoke_root(runner, "plugin", "list")
+    with subtests.test("Testing list on empty plugins file"):
+        result = subprocess.run(
+            ["honk", "plugin", "list"],
+            capture_output=True,
+            text=True,
+            cwd=tmp_path,
+        )
 
-            assert result.exit_code == 0
-            assert result.output == "Loaded plugins:\n"
+        result.check_returncode()
+        assert result.stdout == "Loaded plugins:\n"
 
 
-def test_plugin_load(
-    runner: conftest.Runner, subtests: pytest.Subtests
-) -> None:
-    mock_plugin_path = pathlib.Path.cwd() / "tests" / "honk" / "mock_plugin.py"
+def test_plugin_load(tmp_path: pathlib.Path, subtests: pytest.Subtests) -> None:
+    MOCK_PLUGIN_PATH.copy_into(tmp_path)
 
-    with conftest.isolated_path(runner) as iso:
-        mock_plugin_path.copy_into(iso)
+    plugins_path = tmp_path / PLUGINS
 
-        plugin_path = iso / "plugins.json"
+    with subtests.test("Testing loading the mock plugin"):
+        result = subprocess.run(
+            ["honk", "plugin", "load", "mock_plugin"], cwd=tmp_path
+        )
 
-        with subtests.test("Error on plugin loading"):
-            result = conftest.invoke_root(
-                runner, "plugin", "load", "mock_plugin"
-            )
+        result.check_returncode()
+        assert parse_json(plugins_path) == ["stdplugin", "mock_plugin"]
 
-            assert result.exit_code == 0
-            assert parse_json(plugin_path) == [
-                "stdplugin",
-                "mock_plugin",
-            ]
+    with subtests.test("Testing help output"):
+        result = subprocess.check_output(
+            ["honk", "parse", "--help"], text=True, cwd=tmp_path
+        )
 
-        with subtests.test("Error on listing plugins"):
-            list_result = conftest.invoke_root(runner, "plugin", "list")
+        assert "mock" in result
 
-            assert list_result.exit_code == 0
-            assert list_result.output == (
-                "Loaded plugins:\n- stdplugin\n- mock_plugin\n"
-            )
+    with subtests.test("Testing error on loading a plugin twice"):
+        result = subprocess.run(
+            ["honk", "plugin", "load", "mock_plugin"],
+            capture_output=True,
+            text=True,
+            cwd=tmp_path,
+        )
 
-        with subtests.test("Error on testing help output"):
-            help_result = conftest.invoke_root(runner, "parse", "--help")
+        assert result.returncode == 2
+        assert "Plugin mock_plugin is already loaded" in result.stderr
 
-            assert help_result.exit_code == 0
-            assert "mock" in help_result.output
+    with subtests.test("Test error on loading non-existent plugin"):
+        result = subprocess.run(
+            ["honk", "plugin", "load", "my_plugin"],
+            capture_output=True,
+            text=True,
+            cwd=tmp_path,
+        )
 
-        with subtests.test("No error on loading same plugin twice"):
-            result = conftest.invoke_root(
-                runner, "plugin", "load", "mock_plugin"
-            )
-
-            assert result.exit_code == 2
-            assert "Plugin mock_plugin is already loaded" in result.stderr
+        assert result.returncode == 2
+        assert "No module named my_plugin" in result.stderr
 
 
 def test_plugin_unload(
-    runner: conftest.Runner, subtests: pytest.Subtests
+    tmp_path: pathlib.Path, subtests: pytest.Subtests
 ) -> None:
-    with conftest.isolated_path(runner) as iso:
-        plugin_path = iso / "plugins.json"
+    MOCK_PLUGIN_PATH.copy_into(tmp_path)
 
-        with subtests.test("Error on unloading standart plugin"):
-            result = conftest.invoke_root(
-                runner, "plugin", "unload", "stdplugin"
-            )
+    plugins_path = tmp_path / PLUGINS
 
-            assert result.exit_code == 0
-            assert parse_json(plugin_path) == []
+    with subtests.test("Testing unloading the stdplugin"):
+        result = subprocess.run(
+            ["honk", "plugin", "unload", "stdplugin"], cwd=tmp_path
+        )
 
-        with subtests.test("Error on listing plugins"):
-            list_result = conftest.invoke_root(runner, "plugin", "list")
+        result.check_returncode()
+        assert parse_json(plugins_path) == []
 
-            assert list_result.exit_code == 0
-            assert list_result.output == "Loaded plugins:\n"
+    with subtests.test("Testing help output"):
+        result = subprocess.check_output(
+            ["honk", "parse", "--help"], text=True, cwd=tmp_path
+        )
 
-        with subtests.test("Error on testing help output"):
-            pytest.skip("It loads stdplugin anyway for some reason")
+        assert "Commands" not in result
 
-            help_result = conftest.invoke_root(runner, "parse", "--help")
+    with subtests.test("Testing error on unloading an unloaded plugin"):
+        result = subprocess.run(
+            ["honk", "plugin", "unload", "mock_plugin"],
+            capture_output=True,
+            text=True,
+            cwd=tmp_path,
+        )
 
-            assert help_result.exit_code == 0
-            assert "Commands" not in help_result.output
-
-        with subtests.test("No error on unloading non-existent plugin"):
-            result = conftest.invoke_root(
-                runner, "plugin", "unload", "mock_plugin"
-            )
-
-            assert result.exit_code == 2
-            assert "Plugin mock_plugin is not loaded" in result.stderr
+        assert result.returncode == 2
+        assert "Plugin mock_plugin is not loaded" in result.stderr

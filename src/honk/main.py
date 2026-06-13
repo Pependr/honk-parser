@@ -5,6 +5,7 @@ import json
 import pathlib
 import importlib
 import contextlib
+import importlib.util
 
 from typing import Generator
 
@@ -62,6 +63,7 @@ def parse_group(
     if method is None:
         if path is None:
             ctx.fail("Parsing method is required when reading from stdin")
+
         *_, method = str(path).split(".")
 
     text: str
@@ -103,6 +105,9 @@ def load(ctx: click.Context, module: str) -> None:
     with get_loaded(ctx) as loaded:
         if module in loaded:
             ctx.fail(f"Plugin {module} is already loaded")
+
+        if importlib.util.find_spec(module) is None:
+            ctx.fail(f"No module named {module}")
 
         loaded.append(module)
 
