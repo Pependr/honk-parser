@@ -60,8 +60,8 @@ def test_resolve_path() -> None:
         },
         ["files", "*", "summary"],
     ) == {
-        "test_bruh.py": {"summary": "bruh_summary"},
-        "test_dude.py": {"summary": "dude_summary"},
+        "test_bruh.py": "bruh_summary",
+        "test_dude.py": "dude_summary",
     }
 
     assert pl.resolve_path(
@@ -90,14 +90,14 @@ def test_resolve_path() -> None:
         ["files", "*", "*", "missed"],
     ) == {
         "test_bruh.py": {
-            "functions": {"missed": 10},
-            "classes": {"missed": 16},
-            "summary": {"missed": 26},
+            "functions": 10,
+            "classes": 16,
+            "summary": 26,
         },
         "test_dude.py": {
-            "functions": {"missed": 69},
-            "classes": {"missed": 0},
-            "summary": {"missed": 69},
+            "functions": 69,
+            "classes": 0,
+            "summary": 69,
         },
     }
 

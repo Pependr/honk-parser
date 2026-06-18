@@ -1,7 +1,14 @@
 import pytest
 
+import json
 import pathlib
 import subprocess
+
+from typing import Any
+
+
+def write_json(path: pathlib.Path, data: Any) -> None:
+    path.write_text(json.dumps(data))
 
 
 MOCK_PLUGIN_PATH = pathlib.Path.cwd() / "tests" / "honk" / "mock_plugin.py"
@@ -14,7 +21,9 @@ def mock_path(tmp_path: pathlib.Path) -> pathlib.Path:
     return tmp_path
 
 
-def test_parse(mock_path: pathlib.Path, subtests: pytest.Subtests) -> None:
+def test_parse_strats(
+    mock_path: pathlib.Path, subtests: pytest.Subtests
+) -> None:
     with subtests.test("Test parsing data from stdin"):
         result = subprocess.run(
             ["honk", "parse", "-m", "mock", "echo"],
@@ -78,3 +87,8 @@ def test_parse(mock_path: pathlib.Path, subtests: pytest.Subtests) -> None:
 
         result.check_returncode()
         assert result.stdout == "Processed data: Parsed data: mock\n"
+
+
+def test_parse_dig(
+    mock_path: pathlib.Path, subtests: pytest.Subtests
+) -> None: ...

@@ -1,16 +1,13 @@
 import functools
 
-from typing import Any, Callable, Protocol, Sequence, SupportsIndex, cast
-from collections.abc import Mapping
+from typing import Any, Mapping, Callable, Protocol, Sequence, SupportsIndex
 
 
 class SupportsStr(Protocol):
     def __str__(self) -> str: ...
 
 
-type NestedData = Mapping[str, Any] | Sequence[Any]
-type NestedPath = Sequence[str | SupportsIndex]
-type ParseStrat = Callable[[str], NestedData]
+type ParseStrat = Callable[[str], Any]
 
 
 PARSE_STRATS: dict[str, ParseStrat] = {}
@@ -28,7 +25,7 @@ def get_extension(path: SupportsStr) -> str:
     return str(path).split(".")[-1]
 
 
-def parse(text: str, method: str) -> NestedData:
+def parse(text: str, method: str) -> Any:
     parser = PARSE_STRATS.get(method)
 
     if parser is None:
@@ -51,8 +48,8 @@ def split_obj_path(path: str, delim: str = "/") -> tuple[str | int, ...]:
     return tuple(map(transform, raw))
 
 
-def deep_get(target: NestedData, path: NestedPath) -> Any:
-    return functools.reduce(lambda d, k: d[k], path, target)  # type: ignore
+def deep_get(target: Any, path: Sequence[str | SupportsIndex]) -> Any:
+    return functools.reduce(lambda d, k: d[k], path, target)
 
 
 def split_sequence[T](
@@ -72,26 +69,17 @@ def split_sequence[T](
     )
 
 
-def resolve_path(target: NestedData, path: NestedPath, delim: str = "*") -> Any:
+def resolve_path(
+    target: Any, path: Sequence[str | SupportsIndex], delim: str = "*"
+) -> Any:
     if delim not in path:
         return deep_get(target, path)
 
     pre, post = split_sequence(path, delim, maxsplit=1)
 
-    def wrap(x: Any) -> Any:
-        if path[-1] == delim:
-            return x
-
-        resolved = resolve_path(x, post)
-
-        if isinstance(resolved, Mapping):
-            return cast(Mapping[str, Any], resolved)
-
-        return {path[-1]: resolved}
-
     space: Mapping[str, Any] = deep_get(target, pre)
 
-    return {k: wrap(v) for k, v in space.items()}
+    return {k: resolve_path(v, post, delim) for k, v in space.items()}
 
 
 def match_wildcard(pattern: str, string: str, delim: str = "*") -> bool:
