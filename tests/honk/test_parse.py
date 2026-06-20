@@ -4,11 +4,9 @@ import json
 import pathlib
 import subprocess
 
+from dataclasses import dataclass
+
 from typing import Any
-
-
-def write_json(path: pathlib.Path, data: Any) -> None:
-    path.write_text(json.dumps(data))
 
 
 MOCK_PLUGIN_PATH = pathlib.Path.cwd() / "tests" / "honk" / "mock_plugin.py"
@@ -89,6 +87,80 @@ def test_parse_strats(
         assert result.stdout == "Processed data: Parsed data: mock\n"
 
 
-def test_parse_dig(
-    mock_path: pathlib.Path, subtests: pytest.Subtests
-) -> None: ...
+def test_parse_dig(tmp_path: pathlib.Path, subtests: pytest.Subtests) -> None:
+    @dataclass(frozen=True, slots=True)
+    class Sample:
+        target: str
+        data: Any
+        result: Any
+        delim: str | None = None
+
+        def run(self) -> None:
+            args: list[str] = [
+                "honk",
+                "parse",
+                "-m",
+                "json",
+                "-t",
+                self.target,
+                "json",
+            ]
+
+            if self.delim is not None:
+                args.insert(-1, "-d")
+                args.insert(-1, self.delim)
+
+            process = subprocess.run(
+                args,
+                capture_output=True,
+                text=True,
+                cwd=tmp_path,
+                input=json.dumps(self.data),
+            )
+
+            process.check_returncode()
+            assert process.stdout == f"{json.dumps(self.result)}\n"
+
+    SAMPLES: tuple[Sample, ...] = (
+        Sample("bruh", {"bruh": 10, "dude": 6.7}, 10),
+        Sample("bruh/dude/man", {"bruh": {"dude": {"man": 6.7}}}, 6.7),
+        Sample(
+            "files.src/honk.missing_lines",
+            {"files": {"src/honk": {"missing_lines": 10}}},
+            10,
+            ".",
+        ),
+        Sample("1", [1, 2, 3], 2),
+        Sample("array/1", {"array": [1, 2, 3]}, 2),
+        Sample("0,0,0,0", [[[[4]]]], 4, ","),
+        Sample(
+            "people/*/name",
+            {
+                "people": {
+                    "user1": {"name": "Bob", "age": 33},
+                    "user2": {"name": "Alice", "age": 22},
+                    "user3": {"name": "Anthony", "age": 16},
+                }
+            },
+            {"user1": "Bob", "user2": "Alice", "user3": "Anthony"},
+        ),
+        Sample(
+            "people/*/*/0",
+            {
+                "people": {
+                    "user1": {"name": "Bob", "surname": "Robinson"},
+                    "user2": {"name": "Alice", "surname": "Smith"},
+                    "user3": {"name": "Anthony", "surname": "Gooseling"},
+                }
+            },
+            {
+                "user1": {"name": "B", "surname": "R"},
+                "user2": {"name": "A", "surname": "S"},
+                "user3": {"name": "A", "surname": "G"},
+            },
+        ),
+    )
+
+    for sample in SAMPLES:
+        with subtests.test("Test data picking", sample=repr(sample)):
+            sample.run()

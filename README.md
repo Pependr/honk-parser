@@ -2,5 +2,4 @@
 
 ## ToDo
 
-- Proper tests
 - Documentation
