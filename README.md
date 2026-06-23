@@ -4,7 +4,7 @@ A tool that parses your data into whatever you desire.
 
 ## Installation
 
-Honk Parser is available on PyPI and can be installed using `pip`:
+`honk-parser` is available on PyPI and can be installed using `pip`:
 
 ```sh
 pip install honk-parser
@@ -12,7 +12,7 @@ pip install honk-parser
 
 ## Overview
 
-Honk Parser is a CLI tool that reads structured data from files or standard input, parses it using a specified method, and applies a template to display or transform the result. The tool is built around a flexible plugin system that allows you to extend both parsing methods and output templates.
+`honk-parser` is a CLI tool that reads structured data from files or standard input, parses it using a specified method, and applies a template to display or transform the result. The tool is built around a flexible plugin system that allows you to extend both parsing methods and output templates.
 
 ```sh
 honk --help
@@ -28,7 +28,7 @@ Displays general help information about the tool.
 
 ## Subcommands
 
-Honk Parser provides two main subcommands: `parse` and `plugin`.
+`honk-parser` provides two main subcommands: `parse` and `plugin`.
 
 ### Parse Command
 
@@ -97,7 +97,7 @@ honk plugin [SUBCOMMAND] [OPTIONS]
 
 #### Plugin Loading Mechanism
 
-When Honk Parser starts, it looks for a `plugins.json` file in the current working directory. If the file exists, it loads all modules listed in it. If it doesn't exist, the `stdplugin` is loaded by default.
+When `honk-parser` starts, it looks for a `plugins.json` file in the current working directory. If the file exists, it loads all modules listed in it. If it doesn't exist, the `stdplugin` is loaded by default.
 
 The `plugin` commands modify this `plugins.json` file, making plugin configuration persistent across invocations.
 
@@ -131,7 +131,7 @@ Loaded plugins:
 
 ## Plugin System
 
-Honk Parser's plugin system allows you to extend the tool with custom parsing methods and templates. Plugins are Python modules that use the `@parser` and `@template` decorators to register new functionality.
+`honk-parser`'s plugin system allows you to extend the tool with custom parsing methods and templates. Plugins are Python modules that use the `@parser` and `@template` decorators to register new functionality.
 
 ### How Plugins Work
 
