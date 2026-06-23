@@ -1,0 +1,6 @@
+{
+    "percent_covered": [100.0, 33.33, 40.0, 56.0],
+    "percent_covered_display": ["100.0", "33.33", "40.0", "56.0"],
+    "num_statements": [3, 4],
+    "excluded_line": [5, 3, 4]
+}

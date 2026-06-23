@@ -4,7 +4,7 @@ import json
 import tomllib
 import itertools
 
-from typing import Any, Mapping, Iterable, Sequence
+from typing import Any, Mapping, Sequence
 
 import honk
 import honk.parselib
@@ -40,10 +40,13 @@ def map_map(
     excluded_row: tuple[str, ...],
     swap: bool,
 ) -> None:
-    raw_rows: Iterable[str] = data.keys()
-    raw_columns: Iterable[str] = {
-        key for inner in data.values() for key in inner
-    }
+    raw_rows: list[str] = list(data.keys())
+    raw_columns: list[str] = []
+
+    for inner in data.values():
+        for key in inner.keys():
+            if key not in raw_columns:
+                raw_columns.append(key)
 
     if swap:
         raw_rows, raw_columns = raw_columns, raw_rows
@@ -95,13 +98,20 @@ def map_arr(
 def arr_map(
     data: Sequence[Mapping[str, Any]], excluded: tuple[str, ...]
 ) -> None:
-    columns: list[str] = list(data[0].keys())
+    columns: list[str] = []
+
+    for mapping in data:
+        for key in mapping.keys():
+            if key not in columns and not to_exclude(key, excluded):
+                columns.append(key)
 
     cols: str = f"|{"|".join(columns)}|"
     line: str = f"|{"|".join("-" * len(columns))}|"
 
     head: str = f"{cols}\n{line}\n"
 
-    body: list[str] = [f"|{"|".join(map(str, row.values()))}|" for row in data]
+    body: list[str] = [
+        f"|{"|".join(map(str, map(row.get, columns)))}|" for row in data
+    ]
 
     click.echo(head + "\n".join(body) + "\n")
